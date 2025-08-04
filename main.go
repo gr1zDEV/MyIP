@@ -97,10 +97,19 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             <p><strong>IP Address:</strong> %s (%s)</p>
             <p><strong>Location:</strong> %s, %s, %s</p>
             <p><strong>Latitude / Longitude:</strong> %.4f, %.4f</p>
-            <p><strong>ISP:</strong> %s</p>
-            <p><strong>ASN:</strong> %s (#%d)</p>
-            <p><strong>User-Agent:</strong> %s</p>
+            <p><strong>ISP:</strong> %s</p>`,
+        info.IP, getIPVersion(info.IP),
+        info.City, info.Region, info.Country,
+        info.Latitude, info.Longitude,
+        info.Connection.ISP)
 
+    // Conditionally render ASN only if valid
+    if info.ASN.ASN != 0 && info.ASN.Name != "" {
+        fmt.Fprintf(w, `<p><strong>ASN:</strong> %s (#%d)</p>`, info.ASN.Name, info.ASN.ASN)
+    }
+
+    fmt.Fprintf(w, `
+            <p><strong>User-Agent:</strong> %s</p>
             <div id="map"></div>
 
             <script>
@@ -117,16 +126,10 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
         </body>
         </html>
     `,
-        info.IP, getIPVersion(info.IP),
-        info.City, info.Region, info.Country,
-        info.Latitude, info.Longitude,
-        info.Connection.ISP,
-        info.ASN.Name, info.ASN.ASN,
         r.UserAgent(),
-
         info.Latitude, info.Longitude, // map center
         info.Latitude, info.Longitude, // marker
-        info.City, info.Country)       // popup label
+        info.City, info.Country)       // marker popup
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
