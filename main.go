@@ -95,24 +95,64 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
                     transition: all 0.3s ease;
                 }
                 .light-mode {
-                    background: #fff;
-                    color: #000;
+                    background: #ffffff;
+                    color: #000000;
                 }
                 #map { height: 300px; margin-top: 20px; }
                 iframe { width: 100%%; border: none; }
-                .theme-toggle {
-                    margin: 10px 0;
-                    padding: 6px 12px;
-                    font-size: 14px;
+
+                /* Theme toggle switch */
+                .toggle-container {
+                    position: fixed;
+                    top: 15px;
+                    right: 15px;
+                    z-index: 9999;
+                }
+                .switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 44px;
+                    height: 24px;
+                }
+                .switch input { display: none; }
+                .slider {
+                    position: absolute;
                     cursor: pointer;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background-color: #ccc;
+                    border-radius: 34px;
+                    transition: .4s;
+                }
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 18px;
+                    width: 18px;
+                    left: 3px;
+                    bottom: 3px;
+                    background-color: white;
+                    border-radius: 50%%;
+                    transition: .4s;
+                }
+                input:checked + .slider {
+                    background-color: #4CAF50;
+                }
+                input:checked + .slider:before {
+                    transform: translateX(20px);
                 }
             </style>
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         </head>
         <body>
+            <div class="toggle-container">
+                <label class="switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
             <h1>Your IP Information</h1>
-            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
             <p><strong>IP Address:</strong> %s (%s)</p>
             <p><strong>Location:</strong> %s, %s, %s</p>
             <p><strong>Latitude / Longitude:</strong> %.4f, %.4f</p>
@@ -153,15 +193,17 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             <hr><p><a href="/json">View as JSON</a></p>
 
             <script>
-                function toggleTheme() {
-                    document.body.classList.toggle('light-mode');
-                    const isLight = document.body.classList.contains('light-mode');
-                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-                }
+                const switcher = document.getElementById('themeSwitch');
+                switcher.addEventListener('change', function() {
+                    document.body.classList.toggle('light-mode', this.checked);
+                    localStorage.setItem('theme', this.checked ? 'light' : 'dark');
+                });
+
                 window.onload = function() {
                     const saved = localStorage.getItem('theme');
                     if (saved === 'light') {
                         document.body.classList.add('light-mode');
+                        switcher.checked = true;
                     }
                 }
             </script>
