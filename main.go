@@ -88,7 +88,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             <style>
                 body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
                 #map { height: 300px; margin-top: 20px; }
-                iframe { width: 100%%; height: 400px; margin-top: 20px; border: 1px solid #ccc; }
+                iframe { width: 100%%; height: 450px; margin-top: 20px; border: 1px solid #ccc; }
             </style>
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -123,7 +123,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             </script>
 
             <h2>🚀 Speed Test</h2>
-            <iframe src="https://www.meter.net/" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://embed.meter.net/mini/" frameborder="0" allowfullscreen></iframe>
 
             <hr><p><a href="/json">View as JSON</a></p>
         </body>
