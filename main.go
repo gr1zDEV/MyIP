@@ -9,20 +9,24 @@ import (
 )
 
 type IPInfo struct {
-    Query       string `json:"query"`
-    Country     string `json:"country"`
-    RegionName  string `json:"regionName"`
-    City        string `json:"city"`
-    ISP         string `json:"isp"`
-    Org         string `json:"org"`
-    Timezone    string `json:"timezone"`
-    AS          string `json:"as"`
-    Lat         float64 `json:"lat"`
-    Lon         float64 `json:"lon"`
+    IP       string  `json:"ip"`
+    Type     string  `json:"type"`
+    Country  string  `json:"country"`
+    Region   string  `json:"region"`
+    City     string  `json:"city"`
+    Latitude float64 `json:"latitude"`
+    Longitude float64 `json:"longitude"`
+    ASN struct {
+        ASN  int    `json:"asn"`
+        Name string `json:"name"`
+    } `json:"asn"`
+    Connection struct {
+        ISP string `json:"isp"`
+    } `json:"connection"`
 }
 
 func getIP(r *http.Request) string {
-    // Check if behind proxy
+    // If behind a proxy or CDN
     forwarded := r.Header.Get("X-Forwarded-For")
     if forwarded != "" {
         return forwarded
@@ -32,7 +36,7 @@ func getIP(r *http.Request) string {
 }
 
 func fetchIPInfo(ip string) (*IPInfo, error) {
-    url := fmt.Sprintf("http://ip-api.com/json/%s", ip)
+    url := fmt.Sprintf("https://ipwho.is/%s", ip)
     resp, err := http.Get(url)
     if err != nil {
         return nil, err
@@ -47,6 +51,17 @@ func fetchIPInfo(ip string) (*IPInfo, error) {
     return &info, nil
 }
 
+func getIPVersion(ip string) string {
+    parsed := net.ParseIP(ip)
+    if parsed == nil {
+        return "Unknown"
+    }
+    if parsed.To4() != nil {
+        return "IPv4"
+    }
+    return "IPv6"
+}
+
 func htmlHandler(w http.ResponseWriter, r *http.Request) {
     ip := getIP(r)
     info, err := fetchIPInfo(ip)
@@ -57,17 +72,25 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "text/html")
     fmt.Fprintf(w, `
-        <html><head><title>My IP Info</title></head><body style="font-family:sans-serif;max-width:600px;margin:20px auto">
+        <html><head><title>My IP Info</title></head>
+        <body style="font-family:sans-serif;max-width:600px;margin:20px auto">
         <h1>📡 Your IP Information</h1>
-        <p><strong>IP Address:</strong> %s</p>
+        <p><strong>IP Address:</strong> %s (%s)</p>
         <p><strong>Location:</strong> %s, %s, %s</p>
+        <p><strong>Latitude / Longitude:</strong> %.4f, %.4f</p>
         <p><strong>ISP:</strong> %s</p>
-        <p><strong>Org:</strong> %s</p>
-        <p><strong>Timezone:</strong> %s</p>
+        <p><strong>ASN:</strong> %s (#%d)</p>
         <p><strong>User-Agent:</strong> %s</p>
-        <hr><p><a href="/json">View as JSON</a></p>
+        <hr>
+        <p><a href="/json">View as JSON</a></p>
         </body></html>
-    `, info.Query, info.City, info.RegionName, info.Country, info.ISP, info.Org, info.Timezone, r.UserAgent())
+    `,
+        info.IP, getIPVersion(info.IP),
+        info.City, info.Region, info.Country,
+        info.Latitude, info.Longitude,
+        info.Connection.ISP,
+        info.ASN.Name, info.ASN.ASN,
+        r.UserAgent())
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
