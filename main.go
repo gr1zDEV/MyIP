@@ -86,15 +86,33 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             <title>My IP Info</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
+                body {
+                    font-family: sans-serif;
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background: #121212;
+                    color: #eee;
+                    transition: all 0.3s ease;
+                }
+                .light-mode {
+                    background: #fff;
+                    color: #000;
+                }
                 #map { height: 300px; margin-top: 20px; }
                 iframe { width: 100%%; border: none; }
+                .theme-toggle {
+                    margin: 10px 0;
+                    padding: 6px 12px;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
             </style>
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         </head>
         <body>
-            <h1>📡 Your IP Information</h1>
+            <h1>Your IP Information</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
             <p><strong>IP Address:</strong> %s (%s)</p>
             <p><strong>Location:</strong> %s, %s, %s</p>
             <p><strong>Latitude / Longitude:</strong> %.4f, %.4f</p>
@@ -122,7 +140,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
                     .openPopup();
             </script>
 
-            <h2>🚀 Speed Test</h2>
+            <h2>Speed Test</h2>
             <div style="text-align:right;">
               <div style="min-height:360px;">
                 <div style="width:100%%;height:0;padding-bottom:50%%;position:relative;">
@@ -133,6 +151,20 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             </div>
 
             <hr><p><a href="/json">View as JSON</a></p>
+
+            <script>
+                function toggleTheme() {
+                    document.body.classList.toggle('light-mode');
+                    const isLight = document.body.classList.contains('light-mode');
+                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                }
+                window.onload = function() {
+                    const saved = localStorage.getItem('theme');
+                    if (saved === 'light') {
+                        document.body.classList.add('light-mode');
+                    }
+                }
+            </script>
         </body>
         </html>
     `,
