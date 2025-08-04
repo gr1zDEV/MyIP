@@ -26,9 +26,7 @@ type IPInfo struct {
 }
 
 func getIP(r *http.Request) string {
-    // If behind a proxy or CDN
-    forwarded := r.Header.Get("X-Forwarded-For")
-    if forwarded != "" {
+    if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
         return forwarded
     }
     ip, _, _ := net.SplitHostPort(r.RemoteAddr)
@@ -37,17 +35,28 @@ func getIP(r *http.Request) string {
 
 func fetchIPInfo(ip string) (*IPInfo, error) {
     url := fmt.Sprintf("https://ipwho.is/%s", ip)
-    resp, err := http.Get(url)
+
+    client := &http.Client{}
+    req, _ := http.NewRequest("GET", url, nil)
+    req.Header.Set("User-Agent", "Mozilla/5.0 (MyIPApp)")
+
+    resp, err := client.Do(req)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("failed to reach ipwho.is: %v", err)
     }
     defer resp.Body.Close()
 
     body, _ := ioutil.ReadAll(resp.Body)
+
+    if resp.StatusCode != 200 {
+        return nil, fmt.Errorf("ipwho.is status %d: %s", resp.StatusCode, string(body))
+    }
+
     var info IPInfo
     if err := json.Unmarshal(body, &info); err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error parsing response: %v\nRaw: %s", err, string(body))
     }
+
     return &info, nil
 }
 
@@ -81,8 +90,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
         <p><strong>ISP:</strong> %s</p>
         <p><strong>ASN:</strong> %s (#%d)</p>
         <p><strong>User-Agent:</strong> %s</p>
-        <hr>
-        <p><a href="/json">View as JSON</a></p>
+        <hr><p><a href="/json">View as JSON</a></p>
         </body></html>
     `,
         info.IP, getIPVersion(info.IP),
