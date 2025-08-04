@@ -1,24 +1,24 @@
-# Stage 1: Build the Go application
+# Stage 1: Build the Go app
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Copy go.mod and go.sum if you have them
+# Copy and download dependencies
 COPY go.mod ./
-
-
-# Download dependencies
 RUN go mod download
 
-# Now copy the rest of the source code
-COPY main.go .
+# Copy source and add TLS support
+COPY main.go ./
+RUN apk add --no-cache ca-certificates
 
-# Build the binary
+# Build binary
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o myip .
 
-# Stage 2: Create the final, minimal image
+# Stage 2: Minimal container
 FROM scratch
 
 COPY --from=builder /app/myip /myip
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 EXPOSE 8000
 CMD ["/myip"]
