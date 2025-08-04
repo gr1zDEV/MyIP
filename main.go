@@ -88,6 +88,7 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
             <style>
                 body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
                 #map { height: 300px; margin-top: 20px; }
+                iframe { width: 100%%; height: 400px; margin-top: 20px; border: 1px solid #ccc; }
             </style>
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -103,7 +104,6 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
         info.Latitude, info.Longitude,
         info.Connection.ISP)
 
-    // Conditionally render ASN only if valid
     if info.ASN.ASN != 0 && info.ASN.Name != "" {
         fmt.Fprintf(w, `<p><strong>ASN:</strong> %s (#%d)</p>`, info.ASN.Name, info.ASN.ASN)
     }
@@ -122,14 +122,17 @@ func htmlHandler(w http.ResponseWriter, r *http.Request) {
                     .openPopup();
             </script>
 
+            <h2>🚀 Speed Test</h2>
+            <iframe src="https://www.meter.net/" frameborder="0" allowfullscreen></iframe>
+
             <hr><p><a href="/json">View as JSON</a></p>
         </body>
         </html>
     `,
         r.UserAgent(),
-        info.Latitude, info.Longitude, // map center
-        info.Latitude, info.Longitude, // marker
-        info.City, info.Country)       // marker popup
+        info.Latitude, info.Longitude,
+        info.Latitude, info.Longitude,
+        info.City, info.Country)
 }
 
 func jsonHandler(w http.ResponseWriter, r *http.Request) {
